@@ -1,43 +1,51 @@
 <?php 
-try{
-$user ='root';
-$pass = '';
-$pdo = new PDO ("mysql: host= 127.0.0.1;dbname = trodwe", $user,$pass);
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-} catch( exception $e) {
-    die('Erreur:'. $e->getMessage ()) ; 
+try {
+    $user = 'root';
+    $pass = '';
+    $pdo = new PDO("mysql:host=127.0.0.1;dbname=trodwe", $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (Exception $e) {
+    die('Erreur: ' . $e->getMessage()); 
 }
 
 // Récupération des données du formulaire
-$nom = isset($_POST["nom"]) ? htmlspecialchars($_POST["nom"]) : null;
-$email = isset($_POST["email"]) ? htmlspecialchars($_POST["email"]) : null ;
-$mdp = isset ($_POST["mdp"]) ? htmlspecialchars($_POST["mdp"]) : null ;
-$mdp_confirmation =  isset ($_POST["mdp_confirmation "]) ? htmlspecialchars($_POST["mdp_confirmation "]) : null ;
-// Vérification des noms et prénoms correspondants
-if( $nom !== null&& $email !== null && $mdp !== null && $mdp == $confirmation_mdp);
+$nom = isset($_POST["Nom"]) ? htmlspecialchars($_POST["Nom"]) : null;
+$email = isset($_POST["Email"]) ? htmlspecialchars($_POST["Email"]) : null;
+$mdp = isset($_POST["mdp"]) ? htmlspecialchars($_POST["mdp"]) : null;
+$mdp_confirmation = isset($_POST["confirmation_mdp"]) ? htmlspecialchars($_POST["confirmation_mdp"]) : null;
 
- // Vérification de la longueur et du format du mot de passe
- if (preg_match('/^[a-zA-Z0-9]{8,16}$/', $mdp) && ctype_alnum($mdp)) {
-    // Vérification que le mot de passe contient à la fois des lettres et des chiffres
-    if (preg_match('/[a-zA-Z]/', $mdp) && preg_match('/\d/', $mdp)) {
-        try {
-            // Hashage du mot de passe
-            $hashedPassword = password_hash($mdp, PASSWORD_DEFAULT);
- 
+// Vérification des champs et des mots de passe correspondants
+if ($nom !== null && $email !== null && $mdp !== null && $mdp === $mdp_confirmation) {
+    // Vérification de la longueur et du format du mot de passe
+    if (preg_match('/^[a-zA-Z0-9]{8,16}$/', $mdp) && ctype_alnum($mdp)) {
+        // Vérification que le mot de passe contient à la fois des lettres et des chiffres
+        if (preg_match('/[a-zA-Z]/', $mdp) && preg_match('/\d/', $mdp)) {
+            try {
+                // Hashage du mot de passe
+                $hashedPassword = password_hash($mdp, PASSWORD_DEFAULT);
+                
+                // Préparation et exécution de la requête d'insertion
+                $stmt = $pdo->prepare("INSERT INTO users (Nom, Email, mdp) VALUES (:nom, :email, :mdp)");
+                $stmt->bindParam(':nom', $nom);
+                $stmt->bindParam(':email', $email);
+                $stmt->bindParam(':mdp', $hashedPassword);
+                $stmt->execute();
 
+                echo "Inscription réussie!";
 
-
-
-
-        } catch (PDOException $e) {
-            die("Échec de l'inscription : " . $e->getMessage());
+                header("Location: Home.php");
+                exit;
+            } catch (PDOException $e) {
+                die("Échec de l'inscription : " . $e->getMessage());
+            }
+        } else {
+            echo "Le mot de passe doit contenir à la fois des lettres et des chiffres.";
         }
     } else {
-        echo "Le mot de passe doit contenir à la fois des lettres et des chiffres.";
+        echo "Le mot de passe doit avoir entre 8 et 16 caractères alphanumériques.";
     }
 } else {
-    echo "Le mot de passe doit avoir entre 8 et 16 caractères alphanumériques.";
+    echo "Les champs sont incomplets ou les mots de passe ne correspondent pas.";
 }
 
 
@@ -46,12 +54,15 @@ if( $nom !== null&& $email !== null && $mdp !== null && $mdp == $confirmation_md
 ?>
 
 
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>inscription</title>
+    <link rel="icon" href="./img/trodwé.png">
 </head>
 <style>
      body {
@@ -128,6 +139,37 @@ input[type="submit"]:hover {
     background-color: #708090;
 }
 
+.container {
+    padding-left: 2rem;
+    display: flex;
+    background-color: white;
+    justify-content: space-between;
+}
+
+img {
+    height: 150px;
+    width: 170px;
+    cursor: pointer;
+}
+
+.connect {
+    font-size: 16px;
+}
+
+.connect p {
+
+    color:black;
+
+}
+
+.connect a {
+    color: blue;
+    text-decoration: none;
+}
+
+.connect a:hover {
+    text-decoration: underline;
+}
 
 
 </style>
@@ -148,27 +190,32 @@ input[type="submit"]:hover {
     </script>
 </head>
 <body>
-    <div  class= "formulary"  >
-    <form action="" method="post" onsubmit="return validatePassword()">
-
-         <center><h2>INSCRIVEZ-VOUS</h2></center>
-        <label for="nom">Nom :</label>
-        <input type="text" name="nom" id="nom" required><br>
-
-        <label for="email">Email :</label>
-        <input type="email" name="email" id="email" required><br>
-        
-        <label for="mdp">Mot de passe :</label>
-        <input type="password" name="mdp" id="mdp" required><br>
-
-        <label for="confirmation_mdp">Confirmer le mot de passe :</label>
-        <input type="password" name="confirmation_mdp" id="confirmation_mdp" required><br>
-    
-
-        <input type="submit" value="inscription"    class="centext">
-    </form>
+<header>
+    <div class="container">
+        <a href="Home.php"><img src="./img/trodwé.png" alt=""></a>
     </div>
-    
+</header>
+<div class="formulary">
+        <form action="inscription.php" method="post" onsubmit="return validatePassword()">
+            <center><h2>INSCRIVEZ-VOUS</h2></center>
+            <label for="nom">Nom :</label>
+            <input type="text" name="Nom" id="Nom" required><br>
+
+            <label for="email">Email :</label>
+            <input type="email" name="Email" id="Email" required><br>
+            
+            <label for="mdp">Mot de passe :</label>
+            <input type="password" name="mdp" id="mdp" required><br>
+
+            <label for="confirmation_mdp">Confirmer le mot de passe :</label>
+            <input type="password" name="confirmation_mdp" id="confirmation_mdp" required><br>
+        
+            <input type="submit" value="inscription" class="centext">
+        </form>
+    </div>
+    <div class="connect">
+        <p>Avez-vous déjà un compte? <a href="connexion.php">Connectez-vous</a></p>
+    </div>
     
 </body>
 </style>
